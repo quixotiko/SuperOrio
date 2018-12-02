@@ -1,0 +1,17 @@
+html, body, div {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	height: 100%;
+}
+* {
+	box-sizing: border-box;
+}
+#container {
+	height: 100%;
+	background-color: yellow;
+}
+#game-canvas {
+	display: block;
+	margin: 0 auto;
+}
