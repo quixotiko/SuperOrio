@@ -1,8 +1,15 @@
-var Sprite = function(type,behaviors,src){
+var Sprite = function(type,behaviors,src,cells,cellWidth,cellHeight){
 	var default_width = 32;
 	    default_height = 32;
 	this.image = new Image();
 	this.image.src = src;
+	this.cells = cells;
+	this.cellWidth = cellWidth;
+	this.cellHeight = cellHeight;
+	this.cellTop = 0;
+	this.cellLeft = 0;
+	this.cellIndex = 0;
+	this.lastCellMoveTime = 0;
 	this.type = type;
 	this.behaviors = behaviors || [];
 	this.width = default_width;
@@ -16,9 +23,39 @@ var Sprite = function(type,behaviors,src){
 };
 
 Sprite.prototype = {
-	draw: function(context) {
-		context.drawImage(this.image,this.left,this.top);
+	draw: function(now,lastAnimationFrameTime,context) {
+		if(this.cells < 2){
+			context.drawImage(this.image,this.left,this.top);
+		}
+		else{
+		if(this.lastCellMoveTime === 0){
+			this.lastCellMoveTime = now;
+		}
+		else {
+			if(now - this.lastCellMoveTime > 100){//这里不加if判断条件orio跑得太快了，必须间隔一段时间再更新动画帧
+				this.cellLeft = this.cellIndex*this.cellWidth;
+				context.drawImage(this.image,this.cellLeft,this.cellTop,
+					                         this.cellWidth,this.cellHeight,
+					                         this.left,this.top,this.cellWidth,this.cellHeight);
+				if(this.cellIndex === this.cells - 1)
+				{
+					this.cellIndex = 0;
+				}
+				else
+				{
+					this.cellIndex++;
+				}
+				this.lastCellMoveTime = now;
+		    //不跟新动画帧的时候也要绘制orio，否则orio会一闪一闪的显示
+             }else{
+             	context.drawImage(this.image,this.cellLeft,this.cellTop,
+					                         this.cellWidth,this.cellHeight,
+					                         this.left,this.top,this.cellWidth,this.cellHeight);
+             }
+         }
+
 	}
+}
 };
 
 var SuperOrio = function(){
@@ -112,7 +149,7 @@ SuperOrio.prototype = {
 	},
 	animate: function(now){
 		superOrio.setOffset(now);
-		superOrio.draw();
+		superOrio.draw(now);
 		lastAnimationFrameTime = now;
 		requestNextAnimationFrame(superOrio.animate);
 	},
@@ -130,18 +167,19 @@ SuperOrio.prototype = {
 			sprite.offsetY = sprite.velocityY*(now-this.lastAnimationFrameTime)/1000;
 		}
 	},
-	draw: function(){
+	draw: function(now){
 		this.drawBackground();
 		// for(var i = 0; i < this.platformData.length; i++){
 		// 	this.drawPlatform(this.platformData[i]);
 		// }
-		this.drawSprites();
+		this.drawSprites(now);
 
 	},
 	startGame: function(){
 		requestNextAnimationFrame(superOrio.animate);
 	},
 	
+// 创建sprite对象
 	createSprites: function(){
 		this.createOrioSprite();
 		this.createPlatformSprites();
@@ -152,7 +190,7 @@ SuperOrio.prototype = {
 			this.orioWalkBehavior, 
 			this.orioJumpBehavior, 
 			this.orioFallBehavior, 
-			this.orioCollideBehavior],"images/orio-right-standing.gif");
+			this.orioCollideBehavior],"images/orio-right-standing.gif",1,24,32);
 		this.orio.width = 24;
 		this.orio.height = 32;
 		this.orio.left = 270;
@@ -173,12 +211,15 @@ SuperOrio.prototype = {
 		    this.spritesArray.push(sprite);
 		}
 	},
-	drawSprites: function() {
+
+
+	//根据每个sprite对象里面不同的offset绘画sprite对象，实现移动效果
+	drawSprites: function(now) {
 		var sprites = this.spritesArray;
 		for(var i = 0; i < sprites.length; i++){
 			var sprite = sprites[i];
 			this.context.translate(-sprite.offsetX,sprite.offsetY);
-			sprite.draw(this.context);
+			sprite.draw(now,this.lastAnimationFrameTime,this.context);
 			this.context.translate(sprite.offsetX,-sprite.offsetY);
 		}
 	}
@@ -187,18 +228,35 @@ window.onkeydown = function(e) {
 	var key = e.keyCode;
 	if(key === 65){
 		superOrio.orio_walk_left = true;
+		superOrio.orio.image.src = "images/orio-left-walking.png";
+		superOrio.orio.cells = 3;
+		superOrio.orio.cellWidth = 30;
+		superOrio.orio.cellHeight = 32;
 	}else if(key === 68){
 		superOrio.orio_walk_right = true;
+		superOrio.orio.image.src = "images/orio-right-walking.png";
+		superOrio.orio.cells = 3;
+		superOrio.orio.cellWidth = 30;
+		superOrio.orio.cellHeight = 32;
 	}
 };
 window.onkeyup = function(e) {
 	var key = e.keyCode;
 	if(key === 65){
 		superOrio.orio_walk_left = false;
+		superOrio.orio.image.src = "images/orio-left-standing.gif";
+		superOrio.orio.cells = 1;
+		superOrio.orio.cellWidth = 24;
+		superOrio.orio.cellHeight = 32;
 	}else if(key === 68){
 		superOrio.orio_walk_right = false;
+		superOrio.orio.image.src = "images/orio-right-standing.gif";
+		superOrio.orio.cells = 1;
+		superOrio.orio.cellWidth = 24;
+		superOrio.orio.cellHeight = 32;
 	}
 };
+//防止keydown时间停顿现象
 setInterval(function() {
 	if(superOrio.orio_walk_left){
 		superOrio.orio.left -= 4;
