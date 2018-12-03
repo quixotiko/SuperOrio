@@ -41,6 +41,9 @@ var SuperOrio = function(){
 	this.coins = [];
 	this.spritesArray = [];
 
+	this.orio_walk_left = false;
+	this.orio_walk_right = false;
+
 
 	this.platform_height = 32;
 	this.platformData = [
@@ -115,9 +118,17 @@ SuperOrio.prototype = {
 	},
 	setOffset: function(now){
 		this.setBackgroundOffset(now);
+		this.setSpritesOffset(now);
 	},
 	setBackgroundOffset: function(now){
 		this.bg_offset = this.bg_v*(now-this.lastAnimationFrameTime)/1000;
+	},
+	setSpritesOffset: function(now) {
+		for(var i = 0; i < this.spritesArray.length; i++){
+			var sprite = this.spritesArray[i];
+			sprite.offsetX = sprite.velocityX*(now-this.lastAnimationFrameTime)/1000;
+			sprite.offsetY = sprite.velocityY*(now-this.lastAnimationFrameTime)/1000;
+		}
 	},
 	draw: function(){
 		this.drawBackground();
@@ -125,12 +136,12 @@ SuperOrio.prototype = {
 		// 	this.drawPlatform(this.platformData[i]);
 		// }
 		this.drawSprites();
+
 	},
 	startGame: function(){
 		requestNextAnimationFrame(superOrio.animate);
 	},
 	
-
 	createSprites: function(){
 		this.createOrioSprite();
 		this.createPlatformSprites();
@@ -146,31 +157,56 @@ SuperOrio.prototype = {
 		this.orio.height = 32;
 		this.orio.left = 270;
 		this.orio.top = 544;
+		this.orio_walk_left = false;
+		this.orio_walk_right = false;
 
 		this.spritesArray.push(this.orio);
-	},
-	drawSprites: function() {
-		var sprites = this.spritesArray;
-		for(var i = 0; i < sprites.length; i++){
-			var sprite = sprites[i];
-			this.context.translate(0,sprite.offsetY);
-			sprite.draw(this.context);
-			this.context.translate(0,-sprite.offsetY);
-		}
 	},
 	createPlatformSprites: function(){
 		var platforms = this.platformData;
 		for(var i = 0; i < platforms.length; i++){
-			var sprite = new Sprite("platform", [], "images/4rocks.png");
+			var sprite = new Sprite("platform", [], "images/3rocks.png");
 		    sprite.width = platforms[i].width;
 		    sprite.height = platforms[i].height;
 		    sprite.left = platforms[i].left;
 		    sprite.top = platforms[i].top;
 		    this.spritesArray.push(sprite);
 		}
+	},
+	drawSprites: function() {
+		var sprites = this.spritesArray;
+		for(var i = 0; i < sprites.length; i++){
+			var sprite = sprites[i];
+			this.context.translate(-sprite.offsetX,sprite.offsetY);
+			sprite.draw(this.context);
+			this.context.translate(sprite.offsetX,-sprite.offsetY);
+		}
 	}
 };
-
+window.onkeydown = function(e) {
+	var key = e.keyCode;
+	if(key === 65){
+		superOrio.orio_walk_left = true;
+	}else if(key === 68){
+		superOrio.orio_walk_right = true;
+	}
+};
+window.onkeyup = function(e) {
+	var key = e.keyCode;
+	if(key === 65){
+		superOrio.orio_walk_left = false;
+	}else if(key === 68){
+		superOrio.orio_walk_right = false;
+	}
+};
+setInterval(function() {
+	if(superOrio.orio_walk_left){
+		superOrio.orio.left -= 4;
+	}
+	else if(superOrio.orio_walk_right){
+		superOrio.orio.left += 4;
+	}
+},30);
 var superOrio = new SuperOrio();
 superOrio.initialize();
 superOrio.createSprites();
