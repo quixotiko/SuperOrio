@@ -92,9 +92,18 @@ var SuperOrio = function(){
 	this.platform_height = 32;
 	this.platformData = [
 	{
+		type: "ground",
+		src: "",
+		left: 0,
+		top: 576,
+		height:24,
+		width: 400,
+	},
+
+	{
 		type:"3rocks",
 		src:"images/3rocks.png",
-		left: 100,
+		left: 150,
 		top: 500,
 		height: this.platform_height,
 		width: 96,
@@ -104,7 +113,7 @@ var SuperOrio = function(){
 		
 		type:"3rocks",
 		src:"images/3rocks.png",
-		left: 200,
+		left: 100,
 		top: 400,
 		height: this.platform_height,
 		width: 96,
@@ -113,7 +122,7 @@ var SuperOrio = function(){
 		
 	    type:"3rocks",
 		src:"images/3rocks.png",
-		left: 300,
+		left: 50,
 		top: 300,
 		height: this.platform_height,
 		width: 96,
@@ -121,15 +130,193 @@ var SuperOrio = function(){
 	,
 	{
 		
-		type:"platform01",
+	    type:"3rocks",
+		src:"images/3rocks.png",
+		left: 50,
+		top: 100,
+		height: this.platform_height,
+		width: 96,
+	}
+	,
+	{
+		
+	    type:"3rocks",
+		src:"images/3rocks.png",
+		left: 100,
+		top: 0,
+		height: this.platform_height,
+		width: 96,
+	}
+	,
+	{
+		
+		type:"platform",
 		src:"images/platform01.png",
-		left: 0,
+		left: 150,
 		top: 200,
-		height: 48,
-		width: 16,
+		height: 16,
+		width: 48,
 		velocityX: 100,
-		minLeftDistance:0,
+		minLeftDistance:150,
 		maxLeftDistance:300, 
+	}
+	,
+	{
+		
+	    type:"unstableRock",
+		src:"images/unstablerock.gif",
+		left: 150,
+		top: -100,
+		height: this.platform_height,
+		width: 96,
+	}
+	,{
+		
+	    type:"unstableRock",
+		src:"images/unstablerock.gif",
+		left: 200,
+		top: -200,
+		height: this.platform_height,
+		width: 96,
+	}
+	,{
+		
+	    type:"unstableRock",
+		src:"images/unstablerock.gif",
+		left: 250,
+		top: -300,
+		height: this.platform_height,
+		width: 96,
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform02.png",
+		left: Math.random()*300,
+		top: -400,
+		height: 16,
+		width: 48,
+		velocityX: 10 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform02.png",
+		left: Math.random()*300,
+		top: -500,
+		height: 16,
+		width: 48,
+		velocityX: 10 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform02.png",
+		left: Math.random()*300,
+		top: -600,
+		height: 16,
+		width: 48,
+		velocityX: 10 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform02.png",
+		left: Math.random()*300,
+		top: -700,
+		height: 16,
+		width: 48,
+		velocityX: 10 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform02.png",
+		left: Math.random()*300,
+		top: -800,
+		height: 16,
+		width: 48,
+		velocityX: 10 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform04.png",
+		left: Math.random()*300,
+		top: -900,
+		height: 16,
+		width: 48,
+		velocityX: 100 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform04.png",
+		left: Math.random()*300,
+		top: -1000,
+		height: 16,
+		width: 48,
+		velocityX: 100 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform04.png",
+		left: Math.random()*300,
+		top: -1100,
+		height: 16,
+		width: 48,
+		velocityX: 100 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform04.png",
+		left: Math.random()*300,
+		top: -1200,
+		height: 16,
+		width: 48,
+		velocityX: 100 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
+	}
+	,
+	{
+		
+		type:"platform",
+		src:"images/platform04.png",
+		left: Math.random()*300,
+		top: -1300,
+		height: 16,
+		width: 48,
+		velocityX: 100 + Math.random()*100,
+		minLeftDistance:0,
+		maxLeftDistance:350, 
 	}
 	];
 };
@@ -162,35 +349,52 @@ SuperOrio.prototype = {
 	
 	animate: function(now){
 		superOrio.checkIfOnPlatform();
+		superOrio.checkIfInTheView();
 		superOrio.setOffset(now);
 		superOrio.checkCollision();
 		superOrio.draw(now);
+		superOrio.movingDown();
 		superOrio.lastAnimationFrameTime = now;
 		requestNextAnimationFrame(superOrio.animate);
 	},
-
+	checkIfInTheView: function(){
+		if(this.orio.left<0)
+		{
+			this.orio.left = 0;
+		}
+		if(this.orio.left + this.orio.width > this.canvasWidth)
+		{
+			this.orio.left = this.canvasWidth - this.orio.width;
+		}
+	},
 	setOffset: function(now){
-		// this.setBackgroundOffset(now);
-		this.setVelocityY();
+		// this.setVelocityX(now);
 		this.setOrioJumpOffset(now);
 		this.setOrioFallOffset(now);
 		this.setSpritesOffset(now);
 		
 	},
-	setVelocityY: function() {
-		for(var i =0; i < this.spritesArray.length; i++){
-			var sprite = this.spritesArray[i];
-			if(sprite.type === "orio"&&sprite.jumpping){
-				sprite.velocityY = 0;
-			}
-			else{
-				sprite.velocityY = 0;
+	// setVelocityX: function() {
+	// 	for(var i =0; i < this.spritesArray.length; i++){
+	// 		var sprite = this.spritesArray[i];
+	// 		if(sprite.type === "orio"&&sprite.jumpping){
+	// 			sprite.velocityX = 0;
+	// 		}
+	// 		else{
+	// 			sprite.velocityX = 0;
+	// 		}
+	// 	}
+	// },
+	movingDown: function(){
+		var orio = this.orio;
+		if(orio.top < 500){
+			for(var i =0 ; i < this.spritesArray.length; i++){
+				var sprite = this.spritesArray[i];
+				   sprite.velocityY = 30;
 			}
 		}
 	},
-	// setBackgroundOffset: function(now){
-	// 	this.bg_offset = this.bg_v*(now-this.lastAnimationFrameTime)/1000;
-	// },
+
 	setSpritesOffset: function(now) {
 		for(var i = 0; i < this.spritesArray.length; i++){
 			var sprite = this.spritesArray[i];
@@ -287,7 +491,7 @@ SuperOrio.prototype = {
 	},
 	processCollision: function(sprite) {
 		var o = this.orio;
-		if(sprite.type === "3rocks"){
+		if(sprite.type === "3rocks" || sprite.type === "ground"||sprite.type === "unstableRock"){
 			if(o.isGoingDown()){
 				o.stopJump();
 				o.downTimer.stop();
@@ -305,6 +509,27 @@ SuperOrio.prototype = {
 				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
 				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
 			}
+		}
+		else if(sprite.type === "platform")
+		{
+			if(o.isGoingDown()){
+				o.stopJump();
+				o.downTimer.stop();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+			}
+			if(o.falling){
+				o.stopFalling();
+				o.fallTimer.stop();
+				o.fallTimer.reset();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+			}
+			o.left += sprite.offsetX;
 		}
 	},
 	checkIfOnPlatform: function(){
@@ -335,7 +560,7 @@ SuperOrio.prototype = {
 		for(var i = 0; i < sprites.length; i++){
 			var sprite = sprites[i];
 			sprite.left += sprite.offsetX;
-			// sprite.top += sprite.offsetY;
+			sprite.top += sprite.offsetY;
 			sprite.draw(now,this.lastAnimationFrameTime,this.context);
 			
 		}
@@ -375,7 +600,7 @@ SuperOrio.prototype = {
 		    sprite.left = platforms[i].left;
 		    sprite.top = platforms[i].top;
 		    if(platforms[i].velocityX){sprite.velocityX = platforms[i].velocityX;}
-		    if(platforms[i].velocityY){sprite.velocityY = platforms[i].velocityY;}
+		    // if(platforms[i].velocityY){sprite.velocityY = platforms[i].velocityY;}
 		    if(platforms[i].minLeftDistance){sprite.minLeftDistance = platforms[i].minLeftDistance}
 		    if(platforms[i].maxLeftDistance){sprite.maxLeftDistance = platforms[i].maxLeftDistance}
 		    this.spritesArray.push(sprite);
@@ -396,7 +621,7 @@ SuperOrio.prototype = {
 		this.orio.pre_left = false;
 		this.orio.pre_right = true;
 		
-		this.orio.jumpHeight = 150;
+		this.orio.jumpHeight = 120;
 		this.orio.jumpDuration = 1200;
 		this.orio.jumpping = false;
 		this.orio.upTimer = new AnimationTimer(this.orio.jumpDuration/2,AnimationTimer.makeEaseOutEasingFunction(1.0));
