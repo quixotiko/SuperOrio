@@ -66,7 +66,8 @@ Sprite.prototype = {
 var SuperOrio = function(){
 	this.canvas = document.getElementById("game-canvas");
 	this.context = this.canvas.getContext("2d");
-
+	this.canvasWidth = 400;
+	this.canvasHeight = 600;
 
 	this.backgroundImage = new Image();
 
@@ -91,7 +92,7 @@ var SuperOrio = function(){
 	this.platform_height = 32;
 	this.platformData = [
 	{
-		type:"platform",
+		type:"3rocks",
 		src:"images/3rocks.png",
 		left: 100,
 		top: 500,
@@ -101,18 +102,18 @@ var SuperOrio = function(){
 
 	{
 		
-		type:"platform",
+		type:"3rocks",
 		src:"images/3rocks.png",
-		left: 100,
+		left: 200,
 		top: 400,
 		height: this.platform_height,
 		width: 96,
 	},
 	{
 		
-	    type:"platform",
+	    type:"3rocks",
 		src:"images/3rocks.png",
-		left: 100,
+		left: 300,
 		top: 300,
 		height: this.platform_height,
 		width: 96,
@@ -120,7 +121,7 @@ var SuperOrio = function(){
 	,
 	{
 		
-		type:"platform",
+		type:"platform01",
 		src:"images/platform01.png",
 		left: 0,
 		top: 200,
@@ -160,7 +161,9 @@ SuperOrio.prototype = {
 	// },
 	
 	animate: function(now){
+		superOrio.checkIfOnPlatform();
 		superOrio.setOffset(now);
+		superOrio.checkCollision();
 		superOrio.draw(now);
 		superOrio.lastAnimationFrameTime = now;
 		requestNextAnimationFrame(superOrio.animate);
@@ -168,8 +171,22 @@ SuperOrio.prototype = {
 
 	setOffset: function(now){
 		// this.setBackgroundOffset(now);
+		this.setVelocityY();
+		this.setOrioJumpOffset(now);
+		this.setOrioFallOffset(now);
 		this.setSpritesOffset(now);
-		this.setOrioOffset(now);
+		
+	},
+	setVelocityY: function() {
+		for(var i =0; i < this.spritesArray.length; i++){
+			var sprite = this.spritesArray[i];
+			if(sprite.type === "orio"&&sprite.jumpping){
+				sprite.velocityY = 0;
+			}
+			else{
+				sprite.velocityY = 0;
+			}
+		}
 	},
 	// setBackgroundOffset: function(now){
 	// 	this.bg_offset = this.bg_v*(now-this.lastAnimationFrameTime)/1000;
@@ -184,7 +201,7 @@ SuperOrio.prototype = {
 			sprite.offsetY = sprite.velocityY*(now-this.lastAnimationFrameTime)/1000;
 		}
 	},
-	setOrioOffset: function(now) {
+	setOrioJumpOffset: function(now) {
 		for(var i = 0; i < this.spritesArray.length; i++){
 			if(this.spritesArray[i].type === "orio"){
 				var orio = this.spritesArray[i];
@@ -196,10 +213,12 @@ SuperOrio.prototype = {
 						var time = orio.upTimer.getElapsedTime();
 						var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
 						orio.top = orio.beforeJumpPosition - offsetY;
+
 					}
 					else{
 						orio.jumpClimax = orio.top;
 						orio.upTimer.stop();
+						orio.upTimer.reset();
 						orio.downTimer.start();
 					}
 				}
@@ -211,16 +230,91 @@ SuperOrio.prototype = {
 						
 					}
 					else{
-						orio.stopJump();
-						orio.top = orio.beforeJumpPosition;
-						if(orio.pre_left){orio.image.src = "images/orio-left-standing.gif"};
-						if(orio.pre_right){orio.image.src = "images/orio-right-standing.gif"}
+						var time = orio.downTimer.getElapsedTime()/1000;
+						// var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
+						var offsetY = 0.5*9.81*time*time*1;//模拟重力效应
+						orio.top += offsetY;
 					}
 				}
 			}
 		}
 	},
+	setOrioFallOffset: function(now){
+		if(!this.orio.falling) return;
+		if(this.orio.falling){
+			        // var time = this.orio.fallTimer.getElapsedTime()/1000;
+			    	// this.orio.top += time*time*0.5*9.8*4;
+			    	this.orio.top += 4;//这里不知道为什么fallTimer不工作TAT
+			    	// console.log(this.orio.fallTimer.isRunning());
+			    	// console.log(this.orio.top);
+			    	// console.log(this.orio.fallTimer.getElapsedTime()/1000);
+	     }
+	},
+	checkCollision: function() {
+		for(var i = 0; i < this.spritesArray.length; i++){
+			var sprite = this.spritesArray[i];
+			if(this.isSpriteInView(sprite)){
+				rec = this.calculateCollisionRec(sprite);
+				orioRec = this.calculateCollisionRec(this.orio);
+				if(this.didCollide(sprite,rec,orioRec,this.context)){
+					this.processCollision(sprite);
+				}
 
+			}
+		}
+	},
+	isSpriteInView: function(sprite) {
+		if(sprite.top < this.canvasHeight&&sprite.top + sprite.height> 0)
+			return true;
+	},
+	calculateCollisionRec: function(sprite) {
+		return {
+			left: sprite.left,
+			right: sprite.left + sprite.width,
+			top: sprite.top,
+			bottom: sprite.top + sprite.height,
+			centerX: sprite.left + sprite.width/2,
+			centerY: sprite.top + sprite.height/2,
+		}
+	},
+	didCollide: function(sprite,rec,orioRec,context) {
+		context.beginPath();
+		context.rect(rec.left+1,rec.top,rec.right-rec.left-1,(rec.bottom-rec.top)/2);//这里检测碰撞的时候要注意每个sprite每个动画帧都会被重绘，如果sprite的
+		//offset过大，就会出现遗漏碰撞的情况,最后一个参数的设置，也不能让orio矩形的下边刚好碰到platform的下边就确认发生碰撞
+		// return context.isPointInPath(orioRec.left,orioRec.top) || context.isPointInPath(orioRec.right,orioRec.top)
+		//        || context.isPointInPath(orioRec.right,orioRec.bottom) || context.isPointInPath(orioRec.left,orioRec.bottom);
+		return context.isPointInPath(orioRec.right-1,orioRec.bottom) || context.isPointInPath(orioRec.left+1,orioRec.bottom);
+	},
+	processCollision: function(sprite) {
+		var o = this.orio;
+		if(sprite.type === "3rocks"){
+			if(o.isGoingDown()){
+				o.stopJump();
+				o.downTimer.stop();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+			}
+			if(o.falling){
+				o.stopFalling();
+				o.fallTimer.stop();
+				o.fallTimer.reset();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+			}
+		}
+	},
+	checkIfOnPlatform: function(){
+		var o = this.orio;
+		if(o.platformOn){
+			if(o.left + o.width < o.platformOn.left || o.left > o.platformOn.left + o.platformOn.width){
+				o.fall(0);
+			}
+	    }
+	},
 	draw: function(now){
 		// this.drawBackground();
 		// for(var i = 0; i < this.platformData.length; i++){
@@ -241,7 +335,7 @@ SuperOrio.prototype = {
 		for(var i = 0; i < sprites.length; i++){
 			var sprite = sprites[i];
 			sprite.left += sprite.offsetX;
-			sprite.top += sprite.offsetY;
+			// sprite.top += sprite.offsetY;
 			sprite.draw(now,this.lastAnimationFrameTime,this.context);
 			
 		}
@@ -256,8 +350,10 @@ SuperOrio.prototype = {
 // 创建sprite对象
 	createSprites: function(){
 		this.createBackgroundSprite();
-		this.createOrioSprite();
 		this.createPlatformSprites();
+		this.createOrioSprite();
+		//这里创建sprite对象的顺序很重要！决定了每个sprite对象在spriteArray的位置，后面的drawSprites方法会按顺序绘画sprite
+	    //canvas的drawImage（）先画的会被后画的覆盖
 		// this.initializeSprites();
 	},
 	createBackgroundSprite: function() {
@@ -268,6 +364,22 @@ SuperOrio.prototype = {
 		this.background.top = -1400;
 
 		this.spritesArray.push(this.background);
+	},
+	
+	createPlatformSprites: function(){
+		var platforms = this.platformData;
+		for(var i = 0; i < platforms.length; i++){
+			var sprite = new Sprite(platforms[i].type, [], platforms[i].src,1,platforms[i].width,platforms[i].height);
+		    sprite.width = platforms[i].width;
+		    sprite.height = platforms[i].height;
+		    sprite.left = platforms[i].left;
+		    sprite.top = platforms[i].top;
+		    if(platforms[i].velocityX){sprite.velocityX = platforms[i].velocityX;}
+		    if(platforms[i].velocityY){sprite.velocityY = platforms[i].velocityY;}
+		    if(platforms[i].minLeftDistance){sprite.minLeftDistance = platforms[i].minLeftDistance}
+		    if(platforms[i].maxLeftDistance){sprite.maxLeftDistance = platforms[i].maxLeftDistance}
+		    this.spritesArray.push(sprite);
+		}
 	},
 	createOrioSprite: function(){
 		this.orio = new Sprite("orio",[
@@ -285,10 +397,10 @@ SuperOrio.prototype = {
 		this.orio.pre_right = true;
 		
 		this.orio.jumpHeight = 150;
-		this.orio.jumpDuration = 1000;
+		this.orio.jumpDuration = 1200;
 		this.orio.jumpping = false;
-		this.orio.upTimer = new Stopwatch();
-		this.orio.downTimer = new Stopwatch();
+		this.orio.upTimer = new AnimationTimer(this.orio.jumpDuration/2,AnimationTimer.makeEaseOutEasingFunction(1.0));
+		this.orio.downTimer = new AnimationTimer(this.orio.jumpDuration/2,AnimationTimer.makeEaseInEasingFunction(1.0));
 		this.orio.jump = function() {
 			if(this.jumpping)
 				return;
@@ -313,22 +425,19 @@ SuperOrio.prototype = {
 			return this.downTimer.getElapsedTime() > this.jumpDuration/2;
 		};
 
+
+		this.orio.falling = false;
+		this.orio.fallTimer = new AnimationTimer();
+		this.orio.fall = function(initailVelocity) {
+			this.falling = true;
+			this.initailVelocity = initailVelocity;
+			this.fallTimer.start();
+		};
+		this.orio.stopFalling = function(){
+			this.falling = false;
+			this.fallTimer.stop();
+		};
 		this.spritesArray.push(this.orio);
-	},
-	createPlatformSprites: function(){
-		var platforms = this.platformData;
-		for(var i = 0; i < platforms.length; i++){
-			var sprite = new Sprite(platforms[i].type, [], platforms[i].src,1,platforms[i].width,platforms[i].height);
-		    sprite.width = platforms[i].width;
-		    sprite.height = platforms[i].height;
-		    sprite.left = platforms[i].left;
-		    sprite.top = platforms[i].top;
-		    if(platforms[i].velocityX){sprite.velocityX = platforms[i].velocityX;}
-		    if(platforms[i].velocityY){sprite.velocityY = platforms[i].velocityY;}
-		    if(platforms[i].minLeftDistance){sprite.minLeftDistance = platforms[i].minLeftDistance}
-		    if(platforms[i].maxLeftDistance){sprite.maxLeftDistance = platforms[i].maxLeftDistance}
-		    this.spritesArray.push(sprite);
-		}
 	},
 
 };
@@ -343,6 +452,7 @@ window.onkeydown = function(e) {
 		superOrio.orio.walk_right = true;
 	}
 	else if(key === 87){
+		if(!superOrio.orio.falling)
 		superOrio.orio.jump();
 	}
 };
@@ -371,34 +481,34 @@ window.onkeyup = function(e) {
 };
 //防止keydown时间停顿现象
 setInterval(function() {
-	if(superOrio.orio.walk_left&&!superOrio.orio.walk_right&&!superOrio.orio.jumpping){
+	if(superOrio.orio.walk_left&&!superOrio.orio.walk_right&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
 		superOrio.orio.left -= 4;
 		superOrio.orio.image.src = "images/orio-left-walking.png";
 		superOrio.orio.cells = 3;
 		superOrio.orio.cellWidth = 30;
 		superOrio.orio.cellHeight = 32;
 	}
-	else if(superOrio.orio.walk_right&&!superOrio.orio.walk_left&&!superOrio.orio.jumpping){
+	else if(superOrio.orio.walk_right&&!superOrio.orio.walk_left&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
 		superOrio.orio.left += 4;
 		superOrio.orio.image.src = "images/orio-right-walking.png";
 		superOrio.orio.cells = 3;
 		superOrio.orio.cellWidth = 30;
 		superOrio.orio.cellHeight = 32;
 	}
-	else if(superOrio.orio.jumpping&&superOrio.orio.walk_left&&!superOrio.orio.walk_right){
+	else if(superOrio.orio.jumpping&&superOrio.orio.walk_left&&!superOrio.orio.walk_right || (superOrio.orio.falling&&superOrio.orio.walk_left&&!superOrio.orio.walk_right)){
 		superOrio.orio.left -= 4;
 		superOrio.orio.image.src = "images/orio-left-jumping.gif";
 		superOrio.orio.cells = 1;
 		superOrio.orio.cellWidth = 32;
 		superOrio.orio.cellHeight = 32;
-	}else if(superOrio.orio.jumpping&&!superOrio.orio.walk_left&&superOrio.orio.walk_right){
+	}else if(superOrio.orio.jumpping&&!superOrio.orio.walk_left&&superOrio.orio.walk_right || (superOrio.orio.falling&&!superOrio.orio.walk_left&&superOrio.orio.walk_right)){
 		superOrio.orio.left += 4;
 		superOrio.orio.image.src = "images/orio-right-jumping.gif";
 		superOrio.orio.cells = 1;
 		superOrio.orio.cellWidth = 32;
 		superOrio.orio.cellHeight = 32;
 	}
-	else if(superOrio.orio.jumpping&&!superOrio.orio.walk_left&&!superOrio.orio.walk_right){
+	else if((superOrio.orio.jumpping || superOrio.orio.falling)&&!superOrio.orio.walk_left&&!superOrio.orio.walk_right){
 		if(superOrio.orio.pre_left){
 			superOrio.orio.image.src = "images/orio-left-jumping.gif";
 			superOrio.orio.cells = 1;
