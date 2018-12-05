@@ -24,6 +24,7 @@ var Sprite = function(type,behaviors,src,cells,cellWidth,cellHeight){
 	this.maxLeftDistance = 0;
 	this.minTopDistance =0;
 	this.maxTopDistance = 0;
+	this.visible = true;
 };
 
 Sprite.prototype = {
@@ -74,13 +75,52 @@ var SuperOrio = function(){
 	this.lastAnimationFrameTime = 0;
 	this.bg_v = 10;
 	this.bg_offset = 0;
+	this.gameOver = false;
+	this.win = false;
+	this.winDiv = document.getElementById("win");
+	this.gameOverDiv = document.getElementById("game-over");
 
 
-	this.bichos = [];
+	this.bichosData = [
+	{
+		type: "bicho",
+		src: "images/bicho-walking.png",
+		left: 113,
+		top:268,
+		height: 32,
+		width: 32,
+		velocityX: 50,
+		minLeftDistance: 50,
+		maxLeftDistance: 114,
+		squashed: false,
+		beginDisppearTime: 0,
+	},
+	{
+		type: "bicho",
+		src: "images/bicho-walking.png",
+		left: 120,
+		top:-32,
+		height: 32,
+		width: 32,
+		velocityX: 50,
+		minLeftDistance: 100,
+		maxLeftDistance: 164,
+		squashed: false,
+		beginDisppearTime: 0,
+	},
+	];
 	this.ducks = [];
 	this.plant = [];
-	this.mushrooms = [];
-	this.platforms = [];
+	this.mushroomsData = [
+	{
+		type: "mushroom",
+		src: "images/mushroom.gif",
+		left: 200,
+		top: -1332,
+		height:32,
+		width: 32,
+	}
+	];
 	this.coins = [];
 	this.spritesArray = [];
 
@@ -152,7 +192,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform01.png",
-		left: 150,
+		left: 160,
 		top: 200,
 		height: 16,
 		width: 48,
@@ -193,7 +233,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform02.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -400,
 		height: 16,
 		width: 48,
@@ -206,7 +246,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform02.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -500,
 		height: 16,
 		width: 48,
@@ -219,7 +259,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform02.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -600,
 		height: 16,
 		width: 48,
@@ -232,7 +272,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform02.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -700,
 		height: 16,
 		width: 48,
@@ -245,7 +285,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform02.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -800,
 		height: 16,
 		width: 48,
@@ -258,7 +298,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform04.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -900,
 		height: 16,
 		width: 48,
@@ -271,7 +311,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform04.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -1000,
 		height: 16,
 		width: 48,
@@ -284,7 +324,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform04.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -1100,
 		height: 16,
 		width: 48,
@@ -297,7 +337,7 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform04.png",
-		left: Math.random()*300,
+		left: Math.random()*200,
 		top: -1200,
 		height: 16,
 		width: 48,
@@ -310,13 +350,10 @@ var SuperOrio = function(){
 		
 		type:"platform",
 		src:"images/platform04.png",
-		left: Math.random()*300,
+		left: 200,
 		top: -1300,
 		height: 16,
 		width: 48,
-		velocityX: 100 + Math.random()*100,
-		minLeftDistance:0,
-		maxLeftDistance:350, 
 	}
 	];
 };
@@ -351,11 +388,35 @@ SuperOrio.prototype = {
 		superOrio.checkIfOnPlatform();
 		superOrio.checkIfInTheView();
 		superOrio.setOffset(now);
-		superOrio.checkCollision();
+		superOrio.makeDisppear(now);
+		superOrio.makeFall(now);
 		superOrio.draw(now);
+		superOrio.checkCollision(now);
 		superOrio.movingDown();
+		superOrio.checkIfGameOver();
+		superOrio.checkIfWin();
 		superOrio.lastAnimationFrameTime = now;
 		requestNextAnimationFrame(superOrio.animate);
+	},
+	checkIfGameOver: function() {
+		if(this.orio.top + this.orio.height >= this.canvasHeight)
+			this.gameOver = true;
+		if(this.gameOver&&!this.win){
+			for(var i=0;i<this.spritesArray.length;i++)
+			{
+				var sprite = this.spritesArray[i];
+				sprite.velocityY = 0;
+				sprite.velocityX = 0;
+				this.orio.image.src = "images/orio-fail.gif";
+			}
+			this.gameOverDiv.style.opacity = 1;
+		}
+	},
+	checkIfWin: function(){
+		if(this.win)
+		{
+			this.winDiv.style.opacity = 1;
+		}
 	},
 	checkIfInTheView: function(){
 		if(this.orio.left<0)
@@ -369,9 +430,10 @@ SuperOrio.prototype = {
 	},
 	setOffset: function(now){
 		// this.setVelocityX(now);
+		this.setSpritesOffset(now);
 		this.setOrioJumpOffset(now);
 		this.setOrioFallOffset(now);
-		this.setSpritesOffset(now);
+		
 		
 	},
 	// setVelocityX: function() {
@@ -398,8 +460,9 @@ SuperOrio.prototype = {
 	setSpritesOffset: function(now) {
 		for(var i = 0; i < this.spritesArray.length; i++){
 			var sprite = this.spritesArray[i];
-			if(sprite.left>sprite.maxLeftDistance || sprite.left<sprite.minLeftDistance){
-				sprite.velocityX = -sprite.velocityX;
+			if(sprite.left>sprite.maxLeftDistance || sprite.left<sprite.minLeftDistance ){
+				
+					sprite.velocityX = -sprite.velocityX;
 			}
 			sprite.offsetX = sprite.velocityX*(now-this.lastAnimationFrameTime)/1000;
 			sprite.offsetY = sprite.velocityY*(now-this.lastAnimationFrameTime)/1000;
@@ -407,41 +470,41 @@ SuperOrio.prototype = {
 	},
 	setOrioJumpOffset: function(now) {
 		for(var i = 0; i < this.spritesArray.length; i++){
-			if(this.spritesArray[i].type === "orio"){
-				var orio = this.spritesArray[i];
-				if(!orio.jumpping){
-					return;
+					if(this.spritesArray[i].type === "orio"){
+						var orio = this.spritesArray[i];
+						if(!orio.jumpping){
+							return;
+						}
+						if(orio.isGoingUp()){
+							if(!orio.isDoneGoingUp()){
+								var time = orio.upTimer.getElapsedTime();
+								var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
+								orio.top = orio.beforeJumpPosition - offsetY;
+		
+							}
+							else{
+								orio.jumpClimax = orio.top;
+								orio.upTimer.stop();
+								orio.upTimer.reset();
+								orio.downTimer.start();
+							}
+						}
+						else if(orio.isGoingDown()){
+							if(!orio.isDoneGoingDown()){
+								var time = orio.downTimer.getElapsedTime();
+								var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
+									orio.top = orio.jumpClimax + offsetY;
+								
+							}
+							else{
+								var time = orio.downTimer.getElapsedTime()/1000;
+								// var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
+								var offsetY = 0.5*9.81*time*time*2;//模拟重力效应
+								orio.top += offsetY;
+							}
+						}
+					}
 				}
-				if(orio.isGoingUp()){
-					if(!orio.isDoneGoingUp()){
-						var time = orio.upTimer.getElapsedTime();
-						var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
-						orio.top = orio.beforeJumpPosition - offsetY;
-
-					}
-					else{
-						orio.jumpClimax = orio.top;
-						orio.upTimer.stop();
-						orio.upTimer.reset();
-						orio.downTimer.start();
-					}
-				}
-				else if(orio.isGoingDown()){
-					if(!orio.isDoneGoingDown()){
-						var time = orio.downTimer.getElapsedTime();
-						var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
-							orio.top = orio.jumpClimax + offsetY;
-						
-					}
-					else{
-						var time = orio.downTimer.getElapsedTime()/1000;
-						// var offsetY = (time /(orio.jumpDuration/2)) * orio.jumpHeight;
-						var offsetY = 0.5*9.81*time*time*1;//模拟重力效应
-						orio.top += offsetY;
-					}
-				}
-			}
-		}
 	},
 	setOrioFallOffset: function(now){
 		if(!this.orio.falling) return;
@@ -454,15 +517,28 @@ SuperOrio.prototype = {
 			    	// console.log(this.orio.fallTimer.getElapsedTime()/1000);
 	     }
 	},
-	checkCollision: function() {
+	checkCollision: function(now) {
 		for(var i = 0; i < this.spritesArray.length; i++){
-			var sprite = this.spritesArray[i];
-			if(this.isSpriteInView(sprite)){
-				rec = this.calculateCollisionRec(sprite);
-				orioRec = this.calculateCollisionRec(this.orio);
-				if(this.didCollide(sprite,rec,orioRec,this.context)){
-					this.processCollision(sprite);
-				}
+			if(this.spritesArray[i].type !=="oiro")
+			{
+				var sprite = this.spritesArray[i];
+				if(this.isSpriteInView(sprite)){
+					rec = this.calculateCollisionRec(sprite);
+					orioRec = this.calculateCollisionRec(this.orio);
+					if(sprite.type === "3rocks" || sprite.type === "platform" || sprite.type === "unstableRock"|| sprite.type === "mushroom")
+					{
+						if(this.didCollide(sprite,rec,orioRec,this.context)){
+							this.processCollision(sprite,now);
+						}
+				    }
+				    else if(sprite.type === "bicho")
+				    {
+				    	if(this.didCollideWithBadGuy(sprite,rec,orioRec,this.context))
+				    	{
+				    		this.processCollision(sprite,now);
+				    	}
+				    }
+			    }
 
 			}
 		}
@@ -489,9 +565,15 @@ SuperOrio.prototype = {
 		//        || context.isPointInPath(orioRec.right,orioRec.bottom) || context.isPointInPath(orioRec.left,orioRec.bottom);
 		return context.isPointInPath(orioRec.right-1,orioRec.bottom) || context.isPointInPath(orioRec.left+1,orioRec.bottom);
 	},
-	processCollision: function(sprite) {
+	didCollideWithBadGuy: function(sprite,rec,orioRec,context){
+		context.beginPath();
+		context.rect(rec.left+5,rec.top,rec.right-rec.left-5,(rec.bottom-rec.top)/3);
+		return  context.isPointInPath(orioRec.left,orioRec.top) || context.isPointInPath(orioRec.right,orioRec.top)
+		       || context.isPointInPath(orioRec.right,orioRec.bottom) || context.isPointInPath(orioRec.left,orioRec.bottom);
+	},
+	processCollision: function(sprite,now) {
 		var o = this.orio;
-		if(sprite.type === "3rocks" || sprite.type === "ground"||sprite.type === "unstableRock"){
+		if(sprite.type === "3rocks" || sprite.type === "ground"){
 			if(o.isGoingDown()){
 				o.stopJump();
 				o.downTimer.stop();
@@ -531,6 +613,84 @@ SuperOrio.prototype = {
 			}
 			o.left += sprite.offsetX;
 		}
+		else if(sprite.type === "bicho")
+		{
+			if((o.isGoingDown()||o.falling)&&!sprite.squashed){
+				o.stopJump();
+				o.downTimer.stop();//模拟反弹
+				o.jump();
+				sprite.image.src = "images/bicho-squashing.gif";
+				sprite.cells = 1;
+				sprite.squashed = true;
+				sprite.beginDisppearTime = now;
+			}
+			else if(!sprite.squashed)
+			{
+				o.image.src = "images/orio-fail.gif";
+				o.cells = 1;
+				this.gameOver = true;
+				o.jumpping = false;
+			}
+		}
+		else if(sprite.type === "unstableRock")
+		{
+			if(o.isGoingDown()){
+				o.stopJump();
+				o.downTimer.stop();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+				sprite.toFall = true;
+				sprite.beginFallTime = now;
+			}
+			if(o.falling){
+				o.stopFalling();
+				o.fallTimer.stop();
+				o.fallTimer.reset();
+				o.top = sprite.top - o.height;
+				o.platformOn = sprite;
+				if(o.pre_left){o.image.src = "images/orio-left-standing.gif"};
+				if(o.pre_right){o.image.src = "images/orio-right-standing.gif"};
+				sprite.toFall = true;
+				sprite.beginFallTime = now;
+			}
+		}
+		else if(sprite.type === "mushroom")
+		{
+			this.win = true;
+		}
+	},
+	makeDisppear: function(now) {
+		for(var i=0;i<this.spritesArray.length;i++){
+			if(this.spritesArray[i].type === "bicho")
+			{
+				var sprite = this.spritesArray[i];
+				if(sprite.squashed)
+				{
+					if(sprite.squashed&&now-sprite.beginDisppearTime >300)
+					{
+						sprite.visible = false;
+					}
+			    }
+			}
+		}
+	},
+	makeFall: function(now) {
+		for(var i=0;i<this.spritesArray.length;i++){
+			if(this.spritesArray[i].type === "unstableRock")
+			{
+				var sprite = this.spritesArray[i];
+				if(sprite.toFall)
+				{
+					if(sprite.toFall&&now-sprite.beginFallTime >1000)
+					{
+						sprite.top+=4;
+						this.orio.fall(0);
+					}
+			    }
+			}
+		}
 	},
 	checkIfOnPlatform: function(){
 		var o = this.orio;
@@ -545,7 +705,7 @@ SuperOrio.prototype = {
 		// for(var i = 0; i < this.platformData.length; i++){
 		// 	this.drawPlatform(this.platformData[i]);
 		// }
-		this.drawSprites(now);
+			this.drawSprites(now);
 
 	},
 
@@ -556,14 +716,15 @@ SuperOrio.prototype = {
 	// },
 	//根据每个sprite对象里面不同的offset绘画sprite对象，实现移动效果
 	drawSprites: function(now) {
-		var sprites = this.spritesArray;
-		for(var i = 0; i < sprites.length; i++){
-			var sprite = sprites[i];
-			sprite.left += sprite.offsetX;
-			sprite.top += sprite.offsetY;
-			sprite.draw(now,this.lastAnimationFrameTime,this.context);
-			
-		}
+			var sprites = this.spritesArray;
+			for(var i = 0; i < sprites.length; i++){
+				var sprite = sprites[i];
+				sprite.left += sprite.offsetX;
+				sprite.top += sprite.offsetY;
+				if(sprite.visible)
+					sprite.draw(now,this.lastAnimationFrameTime,this.context);
+				
+			}
 	},
 
 
@@ -576,6 +737,8 @@ SuperOrio.prototype = {
 	createSprites: function(){
 		this.createBackgroundSprite();
 		this.createPlatformSprites();
+		this.createBichoSprite();
+		this.createMushroomSprite();
 		this.createOrioSprite();
 		//这里创建sprite对象的顺序很重要！决定了每个sprite对象在spriteArray的位置，后面的drawSprites方法会按顺序绘画sprite
 	    //canvas的drawImage（）先画的会被后画的覆盖
@@ -604,6 +767,37 @@ SuperOrio.prototype = {
 		    if(platforms[i].minLeftDistance){sprite.minLeftDistance = platforms[i].minLeftDistance}
 		    if(platforms[i].maxLeftDistance){sprite.maxLeftDistance = platforms[i].maxLeftDistance}
 		    this.spritesArray.push(sprite);
+		}
+	},
+	createBichoSprite: function(){
+		var bichos = this.bichosData;
+		for(var i=0;i<bichos.length;i++){
+			var sprite = new Sprite(bichos[i].type,[],bichos[i].src,2,bichos[i].width,bichos[i].height);
+			sprite.width = bichos[i].width;
+			sprite.height = bichos[i].height;
+			sprite.left = bichos[i].left;
+			sprite.top = bichos[i].top;
+			sprite.velocityX = bichos[i].velocityX;
+			sprite.minLeftDistance = bichos[i].minLeftDistance;
+			sprite.maxLeftDistance = bichos[i].maxLeftDistance;
+			sprite.squashed = bichos[i].squashed;
+			sprite.disppearTimer = bichos[i].disppearTimer;
+			sprite.beginDisppearTime = bichos[i].beginDisppearTime;
+
+			this.spritesArray.push(sprite);
+		}
+	},
+	createMushroomSprite: function() {
+		var mushrooms = this.mushroomsData;
+		for(var i=0;i<mushrooms.length;i++){
+			var sprite =new Sprite(mushrooms[i].type,[],mushrooms[i].src,1,mushrooms[i].width,mushrooms[i].height);
+			sprite.width = mushrooms[i].width;
+			sprite.height = mushrooms[i].height;
+			sprite.left = mushrooms[i].left;
+			sprite.top = mushrooms[i].top;
+
+			this.spritesArray.push(sprite);
+
 		}
 	},
 	createOrioSprite: function(){
@@ -669,17 +863,18 @@ SuperOrio.prototype = {
 
 
 window.onkeydown = function(e) {
-	var key = e.keyCode;
-	if(key === 65){
-		superOrio.orio.walk_left = true;
-		
-	}else if(key === 68){
-		superOrio.orio.walk_right = true;
-	}
-	else if(key === 87){
-		if(!superOrio.orio.falling)
-		superOrio.orio.jump();
-	}
+	
+	if(!superOrio.gameOver){var key = e.keyCode;
+		if(key === 65){
+			superOrio.orio.walk_left = true;
+			
+		}else if(key === 68){
+			superOrio.orio.walk_right = true;
+		}
+		else if(key === 87){
+			if(!superOrio.orio.falling)
+			superOrio.orio.jump();
+		}}
 };
 window.onkeyup = function(e) {
 	var key = e.keyCode;
