@@ -901,46 +901,46 @@ window.onkeyup = function(e) {
 };
 //防止keydown时间停顿现象
 setInterval(function() {
-	if(superOrio.orio.walk_left&&!superOrio.orio.walk_right&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
-		superOrio.orio.left -= 4;
-		superOrio.orio.image.src = "images/orio-left-walking.png";
-		superOrio.orio.cells = 3;
-		superOrio.orio.cellWidth = 30;
-		superOrio.orio.cellHeight = 32;
-	}
-	else if(superOrio.orio.walk_right&&!superOrio.orio.walk_left&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
-		superOrio.orio.left += 4;
-		superOrio.orio.image.src = "images/orio-right-walking.png";
-		superOrio.orio.cells = 3;
-		superOrio.orio.cellWidth = 30;
-		superOrio.orio.cellHeight = 32;
-	}
-	else if(superOrio.orio.jumpping&&superOrio.orio.walk_left&&!superOrio.orio.walk_right || (superOrio.orio.falling&&superOrio.orio.walk_left&&!superOrio.orio.walk_right)){
-		superOrio.orio.left -= 4;
-		superOrio.orio.image.src = "images/orio-left-jumping.gif";
-		superOrio.orio.cells = 1;
-		superOrio.orio.cellWidth = 32;
-		superOrio.orio.cellHeight = 32;
-	}else if(superOrio.orio.jumpping&&!superOrio.orio.walk_left&&superOrio.orio.walk_right || (superOrio.orio.falling&&!superOrio.orio.walk_left&&superOrio.orio.walk_right)){
-		superOrio.orio.left += 4;
-		superOrio.orio.image.src = "images/orio-right-jumping.gif";
-		superOrio.orio.cells = 1;
-		superOrio.orio.cellWidth = 32;
-		superOrio.orio.cellHeight = 32;
-	}
-	else if((superOrio.orio.jumpping || superOrio.orio.falling)&&!superOrio.orio.walk_left&&!superOrio.orio.walk_right){
-		if(superOrio.orio.pre_left){
+	if(!superOrio.orio.gameOver){if(superOrio.orio.walk_left&&!superOrio.orio.walk_right&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
+			superOrio.orio.left -= 4;
+			superOrio.orio.image.src = "images/orio-left-walking.png";
+			superOrio.orio.cells = 3;
+			superOrio.orio.cellWidth = 30;
+			superOrio.orio.cellHeight = 32;
+		}
+		else if(superOrio.orio.walk_right&&!superOrio.orio.walk_left&&!superOrio.orio.jumpping&&!superOrio.orio.falling){
+			superOrio.orio.left += 4;
+			superOrio.orio.image.src = "images/orio-right-walking.png";
+			superOrio.orio.cells = 3;
+			superOrio.orio.cellWidth = 30;
+			superOrio.orio.cellHeight = 32;
+		}
+		else if(superOrio.orio.jumpping&&superOrio.orio.walk_left&&!superOrio.orio.walk_right || (superOrio.orio.falling&&superOrio.orio.walk_left&&!superOrio.orio.walk_right)){
+			superOrio.orio.left -= 4;
 			superOrio.orio.image.src = "images/orio-left-jumping.gif";
 			superOrio.orio.cells = 1;
-		    superOrio.orio.cellWidth = 32;
-		    superOrio.orio.cellHeight = 32;
-		}else if(superOrio.orio.pre_right){
+			superOrio.orio.cellWidth = 32;
+			superOrio.orio.cellHeight = 32;
+		}else if(superOrio.orio.jumpping&&!superOrio.orio.walk_left&&superOrio.orio.walk_right || (superOrio.orio.falling&&!superOrio.orio.walk_left&&superOrio.orio.walk_right)){
+			superOrio.orio.left += 4;
 			superOrio.orio.image.src = "images/orio-right-jumping.gif";
 			superOrio.orio.cells = 1;
 			superOrio.orio.cellWidth = 32;
 			superOrio.orio.cellHeight = 32;
 		}
-	}
+		else if((superOrio.orio.jumpping || superOrio.orio.falling)&&!superOrio.orio.walk_left&&!superOrio.orio.walk_right){
+			if(superOrio.orio.pre_left){
+				superOrio.orio.image.src = "images/orio-left-jumping.gif";
+				superOrio.orio.cells = 1;
+			    superOrio.orio.cellWidth = 32;
+			    superOrio.orio.cellHeight = 32;
+			}else if(superOrio.orio.pre_right){
+				superOrio.orio.image.src = "images/orio-right-jumping.gif";
+				superOrio.orio.cells = 1;
+				superOrio.orio.cellWidth = 32;
+				superOrio.orio.cellHeight = 32;
+			}
+		}}
 },30);
 
 var superOrio = new SuperOrio();
